@@ -6,7 +6,7 @@ i am following along with this youtube video
 
 ![youtube thumb](/images/youtube-thumb.GIF "youtube thumb")
 
-twitter api information
+## twitter api information
 
 you will need to get a twitter dev account
 
