@@ -1,4 +1,8 @@
-a learning project
+## twitter api poc
+
+a learning project, proof of concept type of thing
+
+maybe i can integrate this with my "finding kermit" image recognition project someday
 
 thanks to traversy media for the youtube video explaining how to live stream tweets, using a bunch of different tools
 
