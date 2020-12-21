@@ -6,7 +6,7 @@ const TOKEN = process.env.TWITTER_BEARER_TOKEN
 const rulesURL = 'https://api.twitter.com/2/tweets/search/stream/rules'
 const streamURL = 'https://api.twitter.com/2/tweets/search/stream?tweet.fields=public_metrics&expansions=author_id'
 
-const rules = [{value: 'coding'}]
+const rules = [{value: 'nflxxxxx'},{value: 'new england patriots'}]
 
 //get stream rules
 async function getRules() {
@@ -16,10 +16,8 @@ async function getRules() {
         }
     })
 
-    //TODO: comment this out once we get past the current unauthorized error, 
-    //      waiting for twitter dev account access and bearer token
-    console.log('getRules() response')
-    console.log(response.body)
+    //console.log('getRules() response')
+    //console.log(response.body)
     return response.body
 }
 
@@ -35,14 +33,15 @@ async function setRules() {
             Authorization: `Bearer ${TOKEN}`
         }
     })
-    console.log('setRules() response')
-    console.log(response.body)
+    //console.log('setRules() response')
+    //console.log(response.body)
     return response.body
 }
 
 //delete stream rules
 async function deleteRules(rules) {
 
+    //console.log('here at the wall')
     if (!Array.isArray(rules.data)){
         return null
     }
@@ -54,47 +53,64 @@ async function deleteRules(rules) {
             ids: ids
         }
     }
+    
     const response = await needle('post', rulesURL, data, {
         headers: {
             'content-type': 'application/json',
             Authorization: `Bearer ${TOKEN}`
         }
     })
-    console.log('deleteRules() response')
-    console.log(response.body)
+
     return response.body
 }
 
 
+
+function stramTweets(){
+    const stream = needle.get(streamURL,{
+        headers: {
+            Authorization: `Bearer ${TOKEN}`
+        }
+    })
+
+    stream.on('data',(data)=>{
+        try{
+            const json = JSON.parse(data)
+            console.log(json)
+
+        }catch(error){
+            //console.log(error)
+        }
+
+    })
+}
 ;(async () => {
     let currentRules
 
-
     try{
-        // get them first, then delete them
-        currrentRules = await getRules()
-        deleteRules(currentRules)
+        // get all rules
+        currentRules = await getRules()
+        // wipe it clean
+        await deleteRules(currentRules)
+        // set rules based on current rules array
+        await setRules()
+        
     }
     catch(error){
-        console.log('error getRules()')
         console.log(error)
         process.exit(1)
     }
 
     try{
         //now we are safe to add them in, they were previously cleared out
-        await setRules()
+        //await setRules()
     }
     catch(error){
-        console.log('error setRules()')
+        //console.log('error setRules()')
         console.log(error)
         process.exit(1)
     }
-    
+   stramTweets()
 })()
 
-
-
-
-//17:09 of traverse media video, paused and taking dog for walk
-
+// left off at 20:20 of traversy youtube video
