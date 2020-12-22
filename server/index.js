@@ -1,12 +1,42 @@
+const http = require('http')
+const path = require('path')
+const express = require('express')
+const socketIo = require('socket.io')
 const needle = require('needle')
+const { SSL_OP_SINGLE_DH_USE, SSL_OP_MSIE_SSLV2_RSA_PADDING } = require('constants')
 const config = require('dotenv').config()
 const TOKEN = process.env.TWITTER_BEARER_TOKEN
+const PORT = process.env.PORT || 3000
 
+
+///////////////////////////////////////////////
+//// RULES HERE
+////
+
+//  multiple rules would look like this
+//  const rules = [{value: 'nflxxxxx'},{value: 'new england patriots'}]
+
+const rules = [{value: 'xbox one'}]
+
+////
+////
+///////////////////////////////////////////////
+
+
+
+const app = express() //todo: learn express
+
+const server = http.createServer(app)
+
+const io = socketIo(server)
+
+app.get('/', (req, res) => {
+    res.sendFile(path.resolve(__dirname,'../','client','index.html'))
+})
 
 const rulesURL = 'https://api.twitter.com/2/tweets/search/stream/rules'
 const streamURL = 'https://api.twitter.com/2/tweets/search/stream?tweet.fields=public_metrics&expansions=author_id'
 
-const rules = [{value: 'nflxxxxx'},{value: 'new england patriots'}]
 
 //get stream rules
 async function getRules() {
@@ -64,9 +94,7 @@ async function deleteRules(rules) {
     return response.body
 }
 
-
-
-function stramTweets(){
+function streamTweets(socket){
     const stream = needle.get(streamURL,{
         headers: {
             Authorization: `Bearer ${TOKEN}`
@@ -76,15 +104,18 @@ function stramTweets(){
     stream.on('data',(data)=>{
         try{
             const json = JSON.parse(data)
-            console.log(json)
-
+            //console.log(json)
+            socket.emit('tweet', json)
         }catch(error){
             //console.log(error)
         }
 
     })
 }
-;(async () => {
+
+
+io.on('connection', async ()=> {
+console.log('client connected...')
     let currentRules
 
     try{
@@ -95,6 +126,8 @@ function stramTweets(){
         // set rules based on current rules array
         await setRules()
         
+        currentRules = await getRules()
+        console.log(currentRules)
     }
     catch(error){
         console.log(error)
@@ -110,7 +143,42 @@ function stramTweets(){
         console.log(error)
         process.exit(1)
     }
-   stramTweets()
-})()
+   streamTweets(io)
+
+})
+// ;(async () => {
+//     let currentRules
+
+//     try{
+//         // get all rules
+//         currentRules = await getRules()
+//         // wipe it clean
+//         await deleteRules(currentRules)
+//         // set rules based on current rules array
+//         await setRules()
+        
+//         currentRules = await getRules()
+//         console.log(currentRules)
+//     }
+//     catch(error){
+//         console.log(error)
+//         process.exit(1)
+//     }
+
+//     try{
+//         //now we are safe to add them in, they were previously cleared out
+//         //await setRules()
+//     }
+//     catch(error){
+//         //console.log('error setRules()')
+//         console.log(error)
+//         process.exit(1)
+//     }
+//    streamTweets()
+// })()
+
+
+server.listen(PORT, ()=> console.log(`listening on port ${PORT}`))
+
 
 // left off at 20:20 of traversy youtube video
